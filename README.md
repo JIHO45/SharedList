@@ -141,7 +141,13 @@ Firebase reads/writes are exposed as async functions. ViewModels `await` service
 
 ## 📸 Screenshots
 
-Capture set (home, detail, onboarding) is being finalized for App Store Connect; placeholders will be replaced once the marketing build is shot.
+<p align="center">
+  <img src="Docs/images/home.png" width="240" alt="Home Screen"/>
+  <img src="Docs/images/add.png" width="240" alt="Add List Screen"/>
+  <img src="Docs/images/detail.png" width="240" alt="List Detail Screen"/>
+  <img src="Docs/images/share.png" width="240" alt="Share Sheet"/>
+</p>
+<p align="center"><em>Real-time home • Create list • Detail view • Share list</em></p>
 
 ---
 
