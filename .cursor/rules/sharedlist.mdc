@@ -1,0 +1,119 @@
+---
+alwaysApply: true
+---
+
+# Project: Shared List (Real-time Sync Utility)
+
+## Role & Goal
+You are a Senior iOS Engineer specializing in **SwiftUI** and **Firebase**. Your goal is to build a robust, scalable, and clean codebase for "Shared List," a real-time collaborative list application. You prioritize **MVVM architecture**, readable code, and modern Swift concurrency.
+
+## Tech Stack
+- **Language:** Swift 5.9+
+- **UI Framework:** SwiftUI
+- **Backend/Database:** Firebase Firestore (NoSQL), Firebase Authentication
+- **Concurrency:** Swift Async/Await (Structured Concurrency)
+- **Dependency Manager:** Swift Package Manager (SPM)
+
+## Architecture: MVVM (Model-View-ViewModel)
+You must strictly adhere to the MVVM pattern to ensure separation of concerns.
+
+1.  **Models (`/Models`):**
+    - Simple `struct`s conforming to `Codable` and `Identifiable`.
+    - represent data structures (e.g., `TodoList`, `TodoItem`, `UserProfile`).
+    - **Do not** include business logic here.
+
+2.  **ViewModels (`/ViewModels`):**
+    - Classes marked with `@Observable` (or `ObservableObject`).
+    - Handle all business logic, state management, and data transformation.
+    - Expose published properties for Views to bind to.
+    - Contain functions to call Services (e.g., `addItem()`, `fetchLists()`).
+
+3.  **Views (`/Views`):**
+    - Purely declarative UI.
+    - Owns the `@StateObject` or `@Bindable` of the ViewModel.
+    - **No complex logic** inside the `body`. Move logic to the ViewModel or computed properties.
+
+4.  **Services/Repositories (`/Services`):**
+    - Singleton classes or Managers (e.g., `AuthService`, `FirestoreService`).
+    - Handle direct communication with Firebase APIs.
+    - ViewModels call these services; Views never call Firebase directly.
+
+## Coding Guidelines & Style
+
+### General Swift
+- Use **PascalCase** for types (Structs, Classes, Enums) and **camelCase** for variables/functions.
+- Explicitly specify types only when necessary; rely on type inference.
+- Use `guard` statements early to handle error cases and reduce nesting.
+- Force unwrapping (`!`) is **strictly forbidden**. Use optional binding (`if let`, `guard let`) or nil-coalescing (`??`).
+
+### SwiftUI
+- Use `@State` for private view-local state.
+- Break down complex views into smaller, reusable subviews (`Components`).
+- Use `LazyVStack` for lists to optimize performance.
+- Use standard SwiftUI modifiers rather than custom implementation when possible.
+
+### Concurrency
+- Use `async/await` for all asynchronous operations.
+- Avoid completion handlers (closures) where async/await can be used.
+- Ensure UI updates happen on the **Main Actor** (`@MainActor`).
+
+## Firebase Specific Rules
+
+### Firestore
+- Use `Codable` support for Firestore. Do not manually parse `[String: Any]` dictionaries.
+- **Real-time Sync:** Use `addSnapshotListener` for features requiring instant updates (e.g., list changes).
+- **One-time Fetch:** Use `getDocuments` for static data.
+- Always handle errors (e.g., permission denied, network error) gracefully and show user-friendly messages.
+
+### Authentication
+- Use `Auth.auth().currentUser` to check session state.
+- Implement proper sign-out logic.
+
+## UI/UX Design System (The "Shared List" Standard)
+- **Core Component:** "Single List Item".
+    - Layout: `HStack { Checkbox -> VStack { PrimaryText; SubtitleText } }`.
+    - **Primary Text:** The main content (e.g., "Buy Milk", "10:00 AM Meeting").
+    - **Subtitle Text:** Optional detail (e.g., "Low fat", "Room 302").
+- **Input:** Pinned bottom text field for quick entry.
+- **Simplicity:** Minimalist design. Avoid clutter.
+
+## Documentation & Portfolio Readiness
+- Add **DocC comments** (`///`) for all public methods and complex logic. Explain *why* you did something, not just *what*.
+- Keep the file structure organized:
+    - `/App`
+    - `/Models`
+    - `/Views`
+    - `/ViewModels`
+    - `/Services`
+    - `/Utilities` (Extensions, Constants)
+
+## Example: MVVM + Firestore Pattern
+When creating a new feature, follow this structure:
+
+```swift
+// 1. Service
+class ListService {
+    func observeLists() -> AsyncStream<[TodoList]> { ... }
+}
+
+// 2. ViewModel
+@MainActor
+@Observable
+class HomeViewModel {
+    var lists: [TodoList] = []
+    private let service = ListService()
+    
+    func loadLists() async {
+        // Logic to consume stream from service
+    }
+}
+
+// 3. View
+struct HomeView: View {
+    @State private var viewModel = HomeViewModel()
+    
+    var body: some View {
+        List(viewModel.lists) { list in ... }
+            .task { await viewModel.loadLists() }
+    }
+}
